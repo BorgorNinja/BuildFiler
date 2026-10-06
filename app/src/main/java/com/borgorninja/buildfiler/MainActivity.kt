@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.location.Location
 import android.location.LocationListener
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private var currentLat: Double? = null
     private var currentLon: Double? = null
     private var currentHeading: Float = 0f
+
+    private var isProfilerMode: Boolean = false
 
     private var lastQueryHeading: Float = -999f
     private var lastQueryLat: Double = 0.0
@@ -118,8 +121,29 @@ class MainActivity : AppCompatActivity(), LocationListener {
             }
         }
 
+        binding.btnModeToggle.setOnClickListener {
+            isProfilerMode = !isProfilerMode
+            updateModeUI()
+        }
+
         binding.btnSettings.setOnClickListener {
             showSettingsDialog()
+        }
+    }
+
+    private fun updateModeUI() {
+        if (isProfilerMode) {
+            binding.btnModeToggle.text = "🗺️ Map"
+            binding.mapView.visibility = View.GONE
+            binding.fabRecenter.visibility = View.GONE
+            binding.cardProfile.visibility = View.GONE
+            binding.profilerModeView.visibility = View.VISIBLE
+        } else {
+            binding.btnModeToggle.text = "📡 Profiler"
+            binding.mapView.visibility = View.VISIBLE
+            binding.fabRecenter.visibility = View.VISIBLE
+            binding.cardProfile.visibility = View.VISIBLE
+            binding.profilerModeView.visibility = View.GONE
         }
     }
 
@@ -181,14 +205,17 @@ class MainActivity : AppCompatActivity(), LocationListener {
         val fov = prefs.getFloat(PREF_FOV, 60f)
 
         binding.pbScanning.visibility = View.VISIBLE
+        binding.pbProfilerScanning.visibility = View.VISIBLE
 
         activityScope.launch {
             val result = profilerClient.queryBuilding(serverUrl, lat, lon, heading, radius, fov)
             binding.pbScanning.visibility = View.GONE
+            binding.pbProfilerScanning.visibility = View.GONE
 
             result.onSuccess { data ->
                 val target = data.primaryTarget
                 if (target != null) {
+                    // Map Mode HUD (Compact)
                     binding.tvTargetName.text = target.name
                     binding.tvTargetCategory.text = "${target.category.uppercase()} • ${target.type.replace('_', ' ').uppercase()}"
                     binding.tvTargetCategory.visibility = View.VISIBLE
@@ -204,6 +231,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
                         binding.tvTargetAddress.visibility = View.GONE
                     }
 
+                    // Small description for Map Mode
                     if (!target.description.isNullOrBlank()) {
                         binding.tvTargetDescription.visibility = View.VISIBLE
                         binding.tvTargetDescription.text = target.description
@@ -211,27 +239,78 @@ class MainActivity : AppCompatActivity(), LocationListener {
                         binding.tvTargetDescription.visibility = View.GONE
                     }
 
-                    if (target.details.isNotEmpty()) {
-                        binding.tvTargetDetails.visibility = View.VISIBLE
-                        binding.tvTargetDetails.text = target.details.joinToString(" • ")
+                    // Profiler Mode (Detailed View)
+                    binding.tvProfilerTargetName.text = target.name
+                    binding.tvProfilerTargetCategory.text = "${target.category.uppercase()} • ${target.type.replace('_', ' ').uppercase()}"
+                    binding.tvProfilerTargetCategory.visibility = View.VISIBLE
+                    binding.tvProfilerTargetDistance.text = "🎯 %.1fm away • Bearing: %.0f° (Offset: %.1f°)".format(
+                        target.distanceMeters,
+                        target.bearingDegrees,
+                        target.angleOffset
+                    )
+                    if (!target.address.isNullOrBlank()) {
+                        binding.tvProfilerTargetAddress.visibility = View.VISIBLE
+                        binding.tvProfilerTargetAddress.text = "📍 ${target.address}"
                     } else {
-                        binding.tvTargetDetails.visibility = View.GONE
+                        binding.tvProfilerTargetAddress.visibility = View.GONE
+                    }
+
+                    binding.tvProfilerFullDesc.text = if (!target.description.isNullOrBlank()) {
+                        target.description
+                    } else {
+                        "No detailed profile available for this structure."
+                    }
+
+                    if (target.details.isNotEmpty()) {
+                        binding.tvProfilerDetails.visibility = View.VISIBLE
+                        binding.tvProfilerDetails.text = target.details.joinToString(" • ")
+                    } else {
+                        binding.tvProfilerDetails.visibility = View.GONE
+                    }
+
+                    // Populate other candidates in cone
+                    val otherCandidates = data.facingCandidates.filter { it.osmId != target.osmId }
+                    binding.tvCandidatesTitle.text = "DETECTED IN CONE (${data.facingCandidates.size})"
+                    if (otherCandidates.isNotEmpty()) {
+                        val listStr = otherCandidates.take(6).joinToString("\n\n") { c ->
+                            val descLine = if (!c.description.isNullOrBlank()) "\n  ${c.description}" else ""
+                            "• ${c.name} (${c.type.replace('_', ' ')})\n  %.1fm away • Bearing: %.0f°$descLine".format(
+                                c.distanceMeters,
+                                c.bearingDegrees
+                            )
+                        }
+                        binding.tvCandidatesList.text = listStr
+                    } else {
+                        binding.tvCandidatesList.text = "No other structures detected in forward cone."
                     }
 
                     updateTargetMarker(target)
                 } else {
+                    // Map Mode reset
                     binding.tvTargetName.text = "No building directly in front"
                     binding.tvTargetCategory.text = "SCANNING"
                     binding.tvTargetDistance.text = "${data.totalNearby} buildings nearby • Turn towards one"
                     binding.tvTargetAddress.visibility = View.GONE
                     binding.tvTargetDescription.visibility = View.GONE
-                    binding.tvTargetDetails.visibility = View.GONE
+
+                    // Profiler Mode reset
+                    binding.tvProfilerTargetName.text = "No building directly in front"
+                    binding.tvProfilerTargetCategory.text = "SCANNING"
+                    binding.tvProfilerTargetDistance.text = "${data.totalNearby} buildings nearby • Turn towards one"
+                    binding.tvProfilerTargetAddress.visibility = View.GONE
+                    binding.tvProfilerFullDesc.text = "Point your device towards a structure or establishment to inspect."
+                    binding.tvProfilerDetails.visibility = View.GONE
+                    binding.tvCandidatesTitle.text = "DETECTED IN CONE (0)"
+                    binding.tvCandidatesList.text = "No structures currently within forward cone."
+
                     removeTargetMarker()
                 }
             }.onFailure { err ->
                 binding.tvTargetDistance.text = "Profiler connection error: ${err.message}"
                 binding.tvTargetDescription.visibility = View.GONE
-                binding.tvTargetDetails.visibility = View.GONE
+                binding.tvProfilerTargetDistance.text = "Profiler connection error: ${err.message}"
+                binding.tvProfilerFullDesc.text = "Unable to connect to profiler API. Verify server URL in settings."
+                binding.tvProfilerDetails.visibility = View.GONE
             }
         }
     }
