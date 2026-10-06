@@ -30,7 +30,7 @@
         android:textColor="@color/text_primary"
         android:textColorHint="@color/text_secondary"
         android:textSize="14sp"
-        android:hint="http://10.76.112.214:8090"
+        android:hint="http://borgorninja.duckdns.org:8090"
         android:inputType="textUri" />
 
     <TextView

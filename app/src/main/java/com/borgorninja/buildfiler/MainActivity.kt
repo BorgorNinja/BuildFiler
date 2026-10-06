@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
         private const val PREF_SERVER_URL = "pref_server_url"
         private const val PREF_RADIUS = "pref_radius"
         private const val PREF_FOV = "pref_fov"
-        private const val DEFAULT_SERVER = "http://10.76.112.214:8090"
+        private const val DEFAULT_SERVER = "http://borgorninja.duckdns.org:8090"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
