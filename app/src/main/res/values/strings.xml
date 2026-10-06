@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BuildFiler</string>
+    <string name="profiler_searching">Scanning facing direction…</string>
+    <string name="profiler_no_target">No building in line of sight</string>
+    <string name="recenter">Recenter</string>
+    <string name="settings">Settings</string>
+</resources>
