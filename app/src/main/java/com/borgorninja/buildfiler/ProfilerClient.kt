@@ -40,28 +40,52 @@ class ProfilerClient {
 
             var primaryTarget: BuildingTarget? = null
             if (!json.isNull("primary_target")) {
-                val tObj = json.getJSONObject("primary_target")
-                val coords = tObj.getJSONObject("coordinates")
-                primaryTarget = BuildingTarget(
-                    osmId = tObj.optLong("osm_id", 0L),
-                    name = tObj.optString("name", "Unnamed Building"),
-                    category = tObj.optString("category", "building"),
-                    type = tObj.optString("type", "building"),
-                    address = if (tObj.isNull("address")) null else tObj.optString("address"),
-                    distanceMeters = tObj.optDouble("distance_meters", 0.0),
-                    bearingDegrees = tObj.optDouble("bearing_degrees", 0.0),
-                    angleOffset = tObj.optDouble("angle_offset", 0.0),
-                    lat = coords.optDouble("lat", 0.0),
-                    lon = coords.optDouble("lon", 0.0)
-                )
+                primaryTarget = parseBuildingTarget(json.getJSONObject("primary_target"))
+            }
+
+            val candidates = mutableListOf<BuildingTarget>()
+            val candidatesArr = json.optJSONArray("facing_candidates")
+            if (candidatesArr != null) {
+                for (i in 0 until candidatesArr.length()) {
+                    val item = candidatesArr.optJSONObject(i)
+                    if (item != null) {
+                        candidates.add(parseBuildingTarget(item))
+                    }
+                }
             }
 
             val facingCount = json.optInt("facing_count", 0)
             val totalNearby = json.optInt("total_nearby", 0)
 
-            Result.success(ProfileResult(primaryTarget, facingCount, totalNearby))
+            Result.success(ProfileResult(primaryTarget, candidates, facingCount, totalNearby))
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun parseBuildingTarget(tObj: JSONObject): BuildingTarget {
+        val coords = tObj.getJSONObject("coordinates")
+        val detailsList = mutableListOf<String>()
+        val detailsArr = tObj.optJSONArray("details")
+        if (detailsArr != null) {
+            for (i in 0 until detailsArr.length()) {
+                detailsList.add(detailsArr.getString(i))
+            }
+        }
+
+        return BuildingTarget(
+            osmId = tObj.optLong("osm_id", 0L),
+            name = tObj.optString("name", "Unnamed Building"),
+            category = tObj.optString("category", "building"),
+            type = tObj.optString("type", "building"),
+            address = if (tObj.isNull("address")) null else tObj.optString("address"),
+            distanceMeters = tObj.optDouble("distance_meters", 0.0),
+            bearingDegrees = tObj.optDouble("bearing_degrees", 0.0),
+            angleOffset = tObj.optDouble("angle_offset", 0.0),
+            lat = coords.optDouble("lat", 0.0),
+            lon = coords.optDouble("lon", 0.0),
+            description = if (tObj.isNull("description")) null else tObj.optString("description"),
+            details = detailsList
+        )
     }
 }

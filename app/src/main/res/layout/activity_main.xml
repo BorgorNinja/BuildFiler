@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- OpenStreetMap View -->
+    <!-- OpenStreetMap View (Map Mode) -->
     <org.osmdroid.views.MapView
         android:id="@+id/mapView"
         android:layout_width="0dp"
@@ -72,6 +72,23 @@
                     android:layout_marginTop="2dp" />
             </LinearLayout>
 
+            <!-- Mode Toggle Pill Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnModeToggle"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📡 Profiler"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/accent"
+                app:strokeColor="@color/accent"
+                app:cornerRadius="12dp"
+                android:layout_marginEnd="8dp"
+                android:minWidth="44dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSettings"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -88,7 +105,7 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Recenter FAB -->
+    <!-- Recenter FAB (Map Mode) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabRecenter"
         android:layout_width="wrap_content"
@@ -102,7 +119,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:contentDescription="Recenter on location" />
 
-    <!-- Bottom Profiler HUD Card -->
+    <!-- Map Mode Bottom HUD Card -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardProfile"
         android:layout_width="0dp"
@@ -168,6 +185,19 @@
                 android:textSize="13sp"
                 android:layout_marginTop="6dp" />
 
+            <!-- Small / Compact Description for Map Mode -->
+            <TextView
+                android:id="@+id/tvTargetDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@color/text_primary"
+                android:textSize="12sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:layout_marginTop="4dp"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/tvTargetAddress"
                 android:layout_width="match_parent"
@@ -188,5 +218,183 @@
                 android:visibility="gone" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
+    <!-- Profiler Mode Full-Screen HUD View -->
+    <ScrollView
+        android:id="@+id/profilerModeView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/cardTopBar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Primary Target Card in Profiler Mode -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProfilerTarget"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="@color/surface"
+                app:strokeColor="@color/surface_border"
+                app:strokeWidth="1dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tvProfilerTargetName"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Facing scanner active"
+                            android:textColor="@color/text_primary"
+                            android:textStyle="bold"
+                            android:textSize="21sp" />
+
+                        <TextView
+                            android:id="@+id/tvProfilerTargetCategory"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@color/badge_bg"
+                            android:textColor="@color/badge_text"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:text="SCANNING" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvProfilerTargetDistance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Point phone at any building in front of you"
+                        android:textColor="@color/accent"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvProfilerTargetAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/surface_border"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="14dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BUILDING PROFILE &amp; INFORMATION"
+                        android:textColor="@color/accent"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <!-- Detailed Full Description -->
+                    <TextView
+                        android:id="@+id/tvProfilerFullDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No target acquired. Point the phone towards a structure or establishment."
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginTop="8dp" />
+
+                    <!-- Details Pills / Metadata -->
+                    <TextView
+                        android:id="@+id/tvProfilerDetails"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginTop="10dp"
+                        android:visibility="gone" />
+
+                    <ProgressBar
+                        android:id="@+id/pbProfilerScanning"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:indeterminate="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="14dp"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Other Detected Buildings in Forward Cone -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProfilerCandidates"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/surface"
+                app:strokeColor="@color/surface_border"
+                app:strokeWidth="1dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvCandidatesTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DETECTED IN CONE (0)"
+                        android:textColor="@color/accent"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCandidatesList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No other structures within cone field of view."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

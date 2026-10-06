@@ -10,11 +10,14 @@ data class BuildingTarget(
     val bearingDegrees: Double,
     val angleOffset: Double,
     val lat: Double,
-    val lon: Double
+    val lon: Double,
+    val description: String? = null,
+    val details: List<String> = emptyList()
 )
 
 data class ProfileResult(
     val primaryTarget: BuildingTarget?,
+    val facingCandidates: List<BuildingTarget> = emptyList(),
     val facingCount: Int,
     val totalNearby: Int
 )

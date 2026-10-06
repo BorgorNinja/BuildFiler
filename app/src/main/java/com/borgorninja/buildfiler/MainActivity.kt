@@ -204,16 +204,34 @@ class MainActivity : AppCompatActivity(), LocationListener {
                         binding.tvTargetAddress.visibility = View.GONE
                     }
 
+                    if (!target.description.isNullOrBlank()) {
+                        binding.tvTargetDescription.visibility = View.VISIBLE
+                        binding.tvTargetDescription.text = target.description
+                    } else {
+                        binding.tvTargetDescription.visibility = View.GONE
+                    }
+
+                    if (target.details.isNotEmpty()) {
+                        binding.tvTargetDetails.visibility = View.VISIBLE
+                        binding.tvTargetDetails.text = target.details.joinToString(" • ")
+                    } else {
+                        binding.tvTargetDetails.visibility = View.GONE
+                    }
+
                     updateTargetMarker(target)
                 } else {
                     binding.tvTargetName.text = "No building directly in front"
                     binding.tvTargetCategory.text = "SCANNING"
                     binding.tvTargetDistance.text = "${data.totalNearby} buildings nearby • Turn towards one"
                     binding.tvTargetAddress.visibility = View.GONE
+                    binding.tvTargetDescription.visibility = View.GONE
+                    binding.tvTargetDetails.visibility = View.GONE
                     removeTargetMarker()
                 }
             }.onFailure { err ->
                 binding.tvTargetDistance.text = "Profiler connection error: ${err.message}"
+                binding.tvTargetDescription.visibility = View.GONE
+                binding.tvTargetDetails.visibility = View.GONE
             }
         }
     }
