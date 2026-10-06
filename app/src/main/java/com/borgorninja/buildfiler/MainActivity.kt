@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: SharedPreferences
     private lateinit var sensorTracker: SensorTracker
+    private lateinit var rfScanner: RfScanner
     private val profilerClient = ProfilerClient()
 
     private var locationOverlay: MyLocationNewOverlay? = null
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
         setContentView(binding.root)
 
         prefs = getSharedPreferences("buildfiler_prefs", Context.MODE_PRIVATE)
+        rfScanner = RfScanner(this)
 
         setupMap()
         setupSensors()
@@ -312,6 +314,26 @@ class MainActivity : AppCompatActivity(), LocationListener {
                 binding.tvProfilerFullDesc.text = "Unable to connect to profiler API. Verify server URL in settings."
                 binding.tvProfilerDetails.visibility = View.GONE
             }
+
+            // Trigger background ctOS RF scan
+            activityScope.launch(Dispatchers.IO) {
+                val rfList = rfScanner.scanNearby()
+                withContext(Dispatchers.Main) {
+                    updateRfUI(rfList)
+                }
+            }
+        }
+    }
+
+    private fun updateRfUI(devices: List<RfDevice>) {
+        binding.tvRfTitle.text = "📡 CTOS WIRELESS RF SNIFFER (${devices.size} NODES)"
+        if (devices.isNotEmpty()) {
+            val str = devices.joinToString("\n\n") { d ->
+                "⚡ [${d.type}] ${d.name}\n   ADDR: ${d.address} • Signal: ${d.rssi} dBm"
+            }
+            binding.tvRfList.text = str
+        } else {
+            binding.tvRfList.text = "Scanning local 2.4GHz / 5GHz and BLE radio spectrum…"
         }
     }
 
